@@ -52,10 +52,10 @@ void pwm_init() {
 	PWM_TIM->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2 |
 						TIM_CCMR1_OC1PE;
 	
-	// Prescaler 48Mhz/24 = 2Mhz
+	// Prescaler 48Mhz/96 = 500KHz
 	PWM_TIM->PSC = (96 - 1);
 
-	// Auto-reload register = 1Mhz/1000 = 1kHz
+	// Auto-reload register = 500Mhz/1000 = 500Hz
 	PWM_TIM->ARR = (1000 - 1);
 
 	// Set duty cycle = 0%

@@ -40,12 +40,8 @@ static inline uint32_t __waterflow_frequency_to_ml_min(uint32_t freq) {
 
 uint32_t waterflow_read_ml();
 void waterflow_stop();
-
 void waterflow_start();
-
 uint16_t waterflow_read_frequency();
-
 uint32_t waterflow_read_ml_per_sec();
-void TIM3_IRQHandler();
 
 #endif

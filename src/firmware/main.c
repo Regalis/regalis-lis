@@ -100,7 +100,7 @@ int main() {
 			serial_puts("ml (");
 			itoa(percentage, buffer);
 			serial_puts(buffer);
-			serial_puts("%)\n\r");
+			serial_puts("%)");
 			_delay_ms(25);
 		}
 		__pwm_off();
