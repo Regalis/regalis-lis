@@ -24,6 +24,7 @@
 #define FREQ_GPIO GPIOA
 #define FREQ_PIN 9
 #define FREQ_AF 2
+#define FREQ_TIM_IRQ TIM1_CC_IRQn 
 
 #define TIMEBASE_TIM TIM3
 #define TIMEBASE_TIM_IRQ TIM3_IRQn
@@ -39,6 +40,7 @@ static inline uint32_t __waterflow_frequency_to_ml_min(uint32_t freq) {
 }
 
 uint32_t waterflow_read_ml();
+void waterflow_set_target_ml(uint32_t ml);
 void waterflow_stop();
 void waterflow_start();
 uint16_t waterflow_read_frequency();

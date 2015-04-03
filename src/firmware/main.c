@@ -75,6 +75,7 @@ int main() {
 		serial_puts("[I] Setting pump speed to ");
 		serial_puts(buffer);
 		serial_puts("%...\n\r");
+		waterflow_set_target_ml(ml_max);
 		pwm_write(speed);
 		serial_puts("[I] Enabling waterflow sensor...\n\r");
 		waterflow_start();
@@ -82,7 +83,6 @@ int main() {
 		serial_puts("[I] Starting pump...\n\r");	
 		__pwm_on();
 		serial_puts("[I] Entering sensor loop...\n\r\n\r");
-		// TODO: check it in IRQ!
 		while (current_ml <= ml_max) {
 			current_ml = waterflow_read_ml();
 			current_freq = waterflow_read_frequency();
@@ -103,7 +103,6 @@ int main() {
 			serial_puts("%)");
 			_delay_ms(25);
 		}
-		__pwm_off();
 		serial_puts("\n\r\n[I] Stopping pump!\n\r");
 		serial_puts("[I] Waiting for stop...\n\r");
 		// TODO: check it in IRQ!

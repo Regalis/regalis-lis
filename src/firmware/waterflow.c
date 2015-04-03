@@ -19,10 +19,12 @@
 
 #include <stm32f0xx.h>
 #include "waterflow.h"
+#include "pwm.h"
 
 static volatile uint16_t waterflow_frequency;
 static volatile uint16_t waterflow_frequency_tmp;
 static volatile uint32_t waterflow_ml;
+static volatile uint32_t waterflow_target_ml;
 
 void waterflow_init() {
 	FREQ_GPIO->MODER |= (0x2 << (FREQ_PIN << 1));
@@ -32,16 +34,21 @@ void waterflow_init() {
 	RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 
+	FREQ_TIM->CR1 |= TIM_CR1_URS;
 	FREQ_TIM->SMCR |= TIM_SMCR_SMS | TIM_SMCR_TS_2 | TIM_SMCR_TS_1;
 	FREQ_TIM->CCMR1 |= TIM_CCMR1_CC2S_0;
 	// Auto reload regster = MAX
 	FREQ_TIM->ARR = 0xFFFF;
+	FREQ_TIM->DIER |= TIM_DIER_CC1IE;
 
 	//TIMEBASE_TIM->CR1 |= TIM_CR1_ARPE;
+	TIMEBASE_TIM->CR1 |= TIM_CR1_URS;
 	TIMEBASE_TIM->PSC = 48000 - 1;
 	TIMEBASE_TIM->ARR = 1000 - 1;
 	TIMEBASE_TIM->DIER |= TIM_DIER_UIE | TIM_DIER_CC1IE;
 
+	NVIC_SetPriority(FREQ_TIM_IRQ, 0);
+	NVIC_EnableIRQ(FREQ_TIM_IRQ);
 	NVIC_SetPriority(TIMEBASE_TIM_IRQ, 0);
 	NVIC_EnableIRQ(TIMEBASE_TIM_IRQ);
 }
@@ -67,6 +74,11 @@ uint32_t waterflow_read_ml() {
 	return waterflow_ml;
 }
 
+void waterflow_set_target_ml(uint32_t ml) {
+	waterflow_target_ml = ml;
+	FREQ_TIM->CCR1 = (uint32_t)((float)ml / 2.222);
+}
+
 void waterflow_start() {
 	waterflow_ml = 0;
 	waterflow_frequency = 0;
@@ -74,26 +86,32 @@ void waterflow_start() {
 	__waterflow_start_timers();
 }
 
+void TIM1_CC_IRQHandler() {
+	if (FREQ_TIM->SR & TIM_SR_CC1IF) {	
+		__pwm_off();
+		FREQ_TIM->SR &= ~(TIM_SR_CC1IF);
+	}
+}
+
 void TIM3_IRQHandler() {
 	static uint16_t raw_frequency;
 	if (TIMEBASE_TIM->SR & TIM_SR_CC1IF) { // 250ms
 		raw_frequency = __waterflow_read_raw();
-		FREQ_TIM->EGR |= TIM_EGR_UG;
 		TIMEBASE_TIM->SR &= ~(TIM_SR_CC1IF);
+
 		if (TIMEBASE_TIM->CCR1 == 999)
 			TIMEBASE_TIM->CCR1 = 250 - 1;
 		else
 			TIMEBASE_TIM->CCR1 += 250;
 
-		waterflow_frequency_tmp += raw_frequency;
-		waterflow_ml += __waterflow_frequency_to_ml_min(raw_frequency) / 60UL;
+		waterflow_ml = (uint32_t)((float)raw_frequency * 2.222);
 
 		GPIOA->ODR ^= GPIO_ODR_5;
 	}
 	if (TIMEBASE_TIM->SR & TIM_SR_UIF) { // 1s
 		//TIMEBASE_TIM->CCR1 = 250 - 1;
 		TIMEBASE_TIM->SR &= ~(TIM_SR_UIF);
-		waterflow_frequency = waterflow_frequency_tmp;
-		waterflow_frequency_tmp = 0;
+		waterflow_frequency = raw_frequency - waterflow_frequency_tmp;
+		waterflow_frequency_tmp = raw_frequency;
 	}
 }
