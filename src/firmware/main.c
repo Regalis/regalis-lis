@@ -75,6 +75,7 @@ int main() {
 		serial_puts("[I] Setting pump speed to ");
 		serial_puts(buffer);
 		serial_puts("%...\n\r");
+		ml_max = ml_max - ((ml_max / 100UL) * 3UL);
 		waterflow_set_target_ml(ml_max);
 		pwm_write(speed);
 		serial_puts("[I] Enabling waterflow sensor...\n\r");

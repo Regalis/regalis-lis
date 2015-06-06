@@ -47,6 +47,7 @@ inline void serial_init() {
 
 	/* enable transmitter */
 	SERIAL->BRR |= 417;
+	SERIAL->CR3 |= USART_CR3_OVRDIS;
 	SERIAL->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
 }
 

@@ -35,13 +35,13 @@ LDFLAGS=-T$(LD_SCRIPT) -Wl,--gc-sections,--print-gc-sections
 
 
 INCLUDE_PATH=Drivers/CMSIS/Device/ST/STM32F0xx/Include \
-		Drivers/CMSIS/Include \
-		.
+		Drivers/CMSIS/Include
 
 LD_SCRIPT=flash.ld
 DEFS=-D$(MCU)
 STARTUP_CODE=$(LIBRARY_PATH)Projects/STM32F030R8-Nucleo/Examples/GPIO/GPIO_IOToggle/TrueSTUDIO/startup_stm32f030x8.s
 INCLUDE=$(patsubst %, -I$(LIBRARY_PATH)%, $(INCLUDE_PATH))
+INCLUDE+=-I../lib
 SOURCES_PATH := .
 SOURCES := $(foreach DIR,$(SOURCES_PATH),$(wildcard $(DIR)/*.c $(DIR)/*.cpp))
 OBJS := $(patsubst %.c,%.o,$(filter %.c, $(SOURCES)))
