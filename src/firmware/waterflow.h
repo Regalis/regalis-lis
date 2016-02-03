@@ -20,14 +20,14 @@
 #ifndef __WATERFLOW_H__
 #define __WATERFLOW_H__
 
-#define FREQ_TIM TIM1
+#define FREQ_TIM TIM3
 #define FREQ_GPIO GPIOA
-#define FREQ_PIN 9
-#define FREQ_AF 2
+#define FREQ_PIN 7
+#define FREQ_AF 1
 #define FREQ_TIM_IRQ TIM1_CC_IRQn 
 
-#define TIMEBASE_TIM TIM3
-#define TIMEBASE_TIM_IRQ TIM3_IRQn
+#define TIMEBASE_TIM TIM14
+#define TIMEBASE_TIM_IRQ TIM14_IRQn
 
 void waterflow_init();
 

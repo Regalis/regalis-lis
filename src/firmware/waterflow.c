@@ -29,19 +29,28 @@ static volatile uint32_t waterflow_target_ml;
 void waterflow_init() {
 	FREQ_GPIO->MODER |= (0x2 << (FREQ_PIN << 1));
 	FREQ_GPIO->OSPEEDR |= (0x3 << (FREQ_PIN << 1));
-	FREQ_GPIO->AFR[1] |= (FREQ_AF << ((FREQ_PIN - 8) << 2));
+	FREQ_GPIO->AFR[0] |= (FREQ_AF << ((FREQ_PIN) << 2));
 	
-	RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
-	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+	RCC->APB1ENR |= RCC_APB1ENR_TIM14EN | RCC_APB1ENR_TIM3EN;
 
+	// Only counter overflow/underflow generates an update interrupt
+	// or DMA request if enabled
 	FREQ_TIM->CR1 |= TIM_CR1_URS;
+
+	// External Clock Mode 1,
+	// TRGI = Filtered Timer Input 2 (TI2FP2)
 	FREQ_TIM->SMCR |= TIM_SMCR_SMS | TIM_SMCR_TS_2 | TIM_SMCR_TS_1;
+
+	// CC2 channel is configured as input, IC2 is mapped on TI2
 	FREQ_TIM->CCMR1 |= TIM_CCMR1_CC2S_0;
+
 	// Auto reload regster = MAX
 	FREQ_TIM->ARR = 0xFFFF;
+
+	// CC1 is configured as output by default,
+	// enable CC1 interrupt
 	FREQ_TIM->DIER |= TIM_DIER_CC1IE;
 
-	//TIMEBASE_TIM->CR1 |= TIM_CR1_ARPE;
 	TIMEBASE_TIM->CR1 |= TIM_CR1_URS;
 	TIMEBASE_TIM->PSC = 48000 - 1;
 	TIMEBASE_TIM->ARR = 1000 - 1;
@@ -86,14 +95,14 @@ void waterflow_start() {
 	__waterflow_start_timers();
 }
 
-void TIM1_CC_IRQHandler() {
+void TIM3_CC_IRQHandler() {
 	if (FREQ_TIM->SR & TIM_SR_CC1IF) {	
 		__pwm_off();
 		FREQ_TIM->SR &= ~(TIM_SR_CC1IF);
 	}
 }
 
-void TIM3_IRQHandler() {
+void TIM14_IRQHandler() {
 	static uint16_t raw_frequency;
 	if (TIMEBASE_TIM->SR & TIM_SR_CC1IF) { // 250ms
 		raw_frequency = __waterflow_read_raw();

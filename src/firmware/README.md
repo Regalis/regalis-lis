@@ -6,14 +6,12 @@ Firmware for Libre Irrigation System
 	* Core: ARM Cortex M0
 	* Flash: 16K
 	* SRAM: 4K
-* Waterflow sensor YF-S201
+* Waterflow sensor YF-S401
 	* 1 - 30 l/min
-* Pumps:
-	* 8x Car Warsher Pump (12V @ 3A ~3.5 l/min) - 16 outputs
-* Relays:
-	* 16x 5V Songle 10A/30VDC
+* Pump:
+	* 1x Car Warsher Pump (12V @ 3A ~3.5 l/min) - 1 output
 * Motor driver:
-	* Custom P-Mosfet based
+	* Custom N-Mosfet based
 
 ## CPU pinout
 
@@ -24,9 +22,9 @@ Firmware for Libre Irrigation System
 * PA4 - NC
 * PA5 - status LED
 * PA6 - TIM16 PWM output
-* PA7 - NC
-* PA9 - TIM1 external clock input (waterflow sensor)
-* PA10 - NC
+* PA7 - TIM3 CH2 external clock input (waterflow sensor)
+* PA9 - I2C SCL
+* PA10 - I2C SDA
 * PA13 - SWDIO
 * PA14 - SWCLK
 * PB1 - NC
