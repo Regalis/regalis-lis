@@ -25,7 +25,7 @@ AS=arm-none-eabi-as
 AR=arm-none-eabi-ar
 
 MCU_CORE=cortex-m0
-MCU=STM32F030x6
+MCU=STM32F030x8
 
 CCFLAGS=-Wall -mcpu=$(MCU_CORE) -mlittle-endian -mthumb \
 		-ffunction-sections -fdata-sections
@@ -37,7 +37,7 @@ LDFLAGS=-T$(LD_SCRIPT) -Wl,--gc-sections,--print-gc-sections
 INCLUDE_PATH=Drivers/CMSIS/Device/ST/STM32F0xx/Include \
 		Drivers/CMSIS/Include
 
-LD_SCRIPT=flash.ld
+LD_SCRIPT=STM32F030R8_FLASH.ld
 DEFS=-D$(MCU)
 STARTUP_CODE=$(LIBRARY_PATH)Projects/STM32F030R8-Nucleo/Examples/GPIO/GPIO_IOToggle/TrueSTUDIO/startup_stm32f030x8.s
 INCLUDE=$(patsubst %, -I$(LIBRARY_PATH)%, $(INCLUDE_PATH))

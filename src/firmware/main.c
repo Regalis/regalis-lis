@@ -102,7 +102,10 @@ int main() {
 			itoa(percentage, buffer);
 			serial_puts(buffer);
 			serial_puts("%)");
-			_delay_ms(25);
+			itoa(__waterflow_read_raw(), buffer);
+			serial_puts(" | P: ");
+			serial_puts(buffer);
+			_delay_ms(50);
 		}
 		serial_puts("\n\r\n[I] Stopping pump!\n\r");
 		serial_puts("[I] Waiting for stop...\n\r");

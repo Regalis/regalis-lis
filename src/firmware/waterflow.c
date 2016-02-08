@@ -85,7 +85,7 @@ uint32_t waterflow_read_ml() {
 
 void waterflow_set_target_ml(uint32_t ml) {
 	waterflow_target_ml = ml;
-	FREQ_TIM->CCR1 = (uint32_t)((float)ml / 2.222);
+	FREQ_TIM->CCR1 = (uint32_t)((float)ml * WATERFLOW_PULSES_PER_ML);
 }
 
 void waterflow_start() {
@@ -95,7 +95,7 @@ void waterflow_start() {
 	__waterflow_start_timers();
 }
 
-void TIM3_CC_IRQHandler() {
+void TIM3_IRQHandler() {
 	if (FREQ_TIM->SR & TIM_SR_CC1IF) {	
 		__pwm_off();
 		FREQ_TIM->SR &= ~(TIM_SR_CC1IF);
@@ -113,7 +113,7 @@ void TIM14_IRQHandler() {
 		else
 			TIMEBASE_TIM->CCR1 += 250;
 
-		waterflow_ml = (uint32_t)((float)raw_frequency * 2.222);
+		waterflow_ml = (uint32_t)((float)raw_frequency / WATERFLOW_PULSES_PER_ML);
 
 		GPIOA->ODR ^= GPIO_ODR_5;
 	}

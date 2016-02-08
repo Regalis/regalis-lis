@@ -2,10 +2,11 @@
 
 Firmware for Libre Irrigation System
 
-* CPU: STM32F030F4P6
+* CPU: STM32F030R8T6
 	* Core: ARM Cortex M0
-	* Flash: 16K
-	* SRAM: 4K
+	* Flash: 64K
+	* SRAM: 8K
+	* Clock: 48MHz
 * Waterflow sensor YF-S401
 	* 1 - 30 l/min
 * Pump:

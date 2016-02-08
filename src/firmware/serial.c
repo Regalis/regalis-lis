@@ -23,7 +23,7 @@
 
 #define SERIAL_TX 2
 #define SERIAL_RX 3
-#define SERIAL USART1
+#define SERIAL USART2
 #define SERIAL_AF 1
 
 inline void serial_init() {
@@ -34,7 +34,7 @@ inline void serial_init() {
 	GPIOA->OSPEEDR |= (3 << (SERIAL_TX << 1));
 	/* set SERIAL AF (AF7) */
 	GPIOA->AFR[0] |= (SERIAL_AF << ((SERIAL_TX) << 2));
-	/* PA2 in Alternate function mode */
+	/* PA3 in Alternate function mode */
 	GPIOA->MODER |= (2 << (SERIAL_RX << 1));
 	/* high speed */
 	GPIOA->OSPEEDR |= (3 << (SERIAL_RX << 1));
@@ -43,7 +43,7 @@ inline void serial_init() {
 
 
 	/* SERIAL configuration */
-	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
 	/* enable transmitter */
 	SERIAL->BRR |= 417;

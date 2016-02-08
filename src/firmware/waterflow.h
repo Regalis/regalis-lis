@@ -24,10 +24,12 @@
 #define FREQ_GPIO GPIOA
 #define FREQ_PIN 7
 #define FREQ_AF 1
-#define FREQ_TIM_IRQ TIM1_CC_IRQn 
+#define FREQ_TIM_IRQ TIM3_IRQn 
 
 #define TIMEBASE_TIM TIM14
 #define TIMEBASE_TIM_IRQ TIM14_IRQn
+
+#define WATERFLOW_PULSES_PER_ML 5
 
 void waterflow_init();
 
