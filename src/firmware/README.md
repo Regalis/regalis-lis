@@ -13,19 +13,21 @@ Firmware for Libre Irrigation System
 	* 1x Car Warsher Pump (12V @ 3A ~3.5 l/min) - 1 output
 * Motor driver:
 	* Custom N-Mosfet based
+* RGB LED strip
 
 ## CPU pinout
 
 * PA0 - NC
 * PA1 - NC
-* PA2 - USART1 serial tx
-* PA3 - USART1 serial rx
+* PA2 - USART2 serial tx
+* PA3 - USART2 serial rx
 * PA4 - NC
 * PA5 - status LED
 * PA6 - TIM16 PWM output
 * PA7 - TIM3 CH2 external clock input (waterflow sensor)
-* PA9 - I2C SCL
-* PA10 - I2C SDA
+* PA8 - RGB LED strip driver channel R
+* PA9 - RGB LED strip driver channel G
+* PA10 - RGB LED strip driver channel B
 * PA13 - SWDIO
 * PA14 - SWCLK
 * PB1 - NC

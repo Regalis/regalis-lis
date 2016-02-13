@@ -38,7 +38,7 @@ void pwm_init() {
 	// PWM_PIN in High speed
 	PWM_GPIO->OSPEEDR |= (0x3 << (PWM_PIN << 1));
 
-	// PWM_PIN Alternate function #1 (TIM16_CH1)
+	// PWM_PIN Alternate function #5 (TIM16_CH1)
 	PWM_GPIO->AFR[0] |= (0x5 << (PWM_PIN << 2));
 
 	// Timer configuration

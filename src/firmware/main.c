@@ -24,6 +24,7 @@
 #include "string_utils.h"
 #include "waterflow.h"
 #include "utils.h"
+#include "led-rgb.h"
 
 uint16_t menu_read_uint(const char *label, const char *unit, int16_t step) {
 	uint16_t tmp = 0;
@@ -55,6 +56,12 @@ int main() {
 	serial_puts("\r\n[I] System reboot...\n\r");
 	waterflow_init();
 	serial_puts("[I] Waterflow sensor initialized...\n\r");
+	// RGB driver basic test
+	led_rgb_init();
+	serial_puts("[I] LED RGB driver initialized...\n\r");
+	led_rgb_set_color(50, 125, 255);
+	serial_puts("[I] LED RGB color set: rgb(50, 125, 255)...\n\r");
+	__led_rgb_on();
 
 
 	char animation[] = "|/-\\";
