@@ -25,6 +25,7 @@
 #include "waterflow.h"
 #include "utils.h"
 #include "led-rgb.h"
+#include "valves.h"
 
 uint16_t menu_read_uint(const char *label, const char *unit, int16_t step) {
 	uint16_t tmp = 0;
@@ -48,6 +49,7 @@ uint16_t menu_read_uint(const char *label, const char *unit, int16_t step) {
 }
 
 int main() {
+	valves_init();
 	delay_init();
 	pwm_init();
 	RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
@@ -63,6 +65,19 @@ int main() {
 	serial_puts("[I] LED RGB color set: rgb(50, 125, 255)...\n\r");
 	__led_rgb_on();
 
+	// Valves basic test
+	serial_puts("[I] Testing valves driver...\n\r");
+	int v = 0;
+	for (v = 0; v < VALVES_CHANNELS_NO; ++v) {
+		_delay_ms(2500);
+		serial_puts(" [I] Enabling single channel...\n\r");
+		valves_enable_output(v);
+		_delay_ms(2000);
+		serial_puts(" [I] Disabling all channels...\n\r");
+		valves_disable_all_outputs();
+	}
+
+	serial_puts("[I] Valves test done...\n\r");
 
 	char animation[] = "|/-\\";
 	uint8_t animation_i = 0;
@@ -82,7 +97,7 @@ int main() {
 		serial_puts("[I] Setting pump speed to ");
 		serial_puts(buffer);
 		serial_puts("%...\n\r");
-		ml_max = ml_max - ((ml_max / 100UL) * 3UL);
+	//	ml_max = ml_max - ((ml_max / 100UL) * 3UL);
 		waterflow_set_target_ml(ml_max);
 		pwm_write(speed);
 		serial_puts("[I] Enabling waterflow sensor...\n\r");
