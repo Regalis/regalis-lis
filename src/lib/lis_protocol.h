@@ -39,6 +39,9 @@
 #define LIS_PREAMBLE_MASK 0xF0
 #define LIS_MSG_MASK 0x0F
 
+#define LIS_MAX_PACKET_SIZE 263
+#define LIS_MIN_PACKET_SIZE 8
+
 #define LIS_CHECKSUM_INITIAL_VALUE 0x000000FF
 
 enum lis_msg {
@@ -121,6 +124,11 @@ static inline uint8_t *lis_get_data(uint8_t *buffer)
 static inline uint32_t lis_get_checksum(uint8_t *buffer)
 {
 	return *((uint32_t*)(buffer + 5 + buffer[3]));
+}
+
+static inline uint16_t lis_get_packet_length(uint8_t *buffer)
+{
+	return LIS_MIN_PACKET_SIZE + lis_get_data_length(buffer);
 }
 
 /**
