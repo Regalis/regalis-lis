@@ -23,25 +23,39 @@
 /******************************************************************
  * LIS Protocol format:                            
  *                                                  
- *    8bit     8bit    8bit    8bit   L * 8bit    32bit
- * |   PM   |   F   |   C   |   L   |    D     |   X    |
+ *    8bit     8bit    8bit    8bit    8bit   L * 8bit    32bit
+ * |   PM   |   F   |   C   |   L   |   X   |    D     |   Y    |
  *                                                 
  *  P - preamble
  *  M - message type (lis_msg_t)
  *  F - flags (lis_flag_t)
  *  C - command (lis_command_t)
  *  L - data length
+ *  X - checksum (header only)
  *  D - data
- *  X - checksum
+ *  Y - checksum (whole packet)
  *****************************************************************/
+
+/*
+ * Field positions inside packet buffer:
+ */
+#define LIS_POS_PREAMBLE 0
+#define LIS_POS_MESSAGE 0
+#define LIS_POS_FLAGS 1
+#define LIS_POS_COMMAND 2
+#define LIS_POS_DATA_LENGTH 3
+#define LIS_POS_HEADER_CHECKSUM 4
+#define LIS_POS_DATA 5
+#define LIS_POS_CHECKSUM 6
 
 #define LIS_PREAMBLE 0xF0
 #define LIS_PREAMBLE_MASK 0xF0
 #define LIS_MSG_MASK 0x0F
 
-#define LIS_MAX_PACKET_SIZE 263
-#define LIS_MIN_PACKET_SIZE 8
+#define LIS_MAX_PACKET_SIZE 264
+#define LIS_MIN_PACKET_SIZE 9
 
+#define LIS_HEADER_CHECKSUM_INITIAL_VALUE 0xFF
 #define LIS_CHECKSUM_INITIAL_VALUE 0x000000FF
 
 enum lis_msg {
@@ -98,37 +112,110 @@ static inline uint8_t lis_is_preamble(uint8_t byte)
 
 static inline uint8_t lis_get_message(uint8_t *buffer)
 {
-	return buffer[0] & LIS_MSG_MASK;
+	return buffer[LIS_POS_MESSAGE] & LIS_MSG_MASK;
 }
 
 static inline uint8_t lis_get_flags(uint8_t *buffer)
 {
-	return buffer[1];
+	return buffer[LIS_POS_FLAGS];
 }
 
 static inline uint8_t lis_get_command(uint8_t *buffer)
 {
-	return buffer[2];
+	return buffer[LIS_POS_COMMAND];
 }
 
 static inline uint8_t lis_get_data_length(uint8_t *buffer)
 {
-	return buffer[3];
+	return buffer[LIS_POS_DATA_LENGTH];
+}
+
+static inline uint8_t lis_get_header_checksum(uint8_t *buffer)
+{
+	return buffer[LIS_POS_HEADER_CHECKSUM];
 }
 
 static inline uint8_t *lis_get_data(uint8_t *buffer)
 {
-	return buffer + lis_get_data_length(buffer) + 4;
+	return buffer + lis_get_data_length(buffer) + LIS_POS_DATA;
 }
 
 static inline uint32_t lis_get_checksum(uint8_t *buffer)
 {
-	return *((uint32_t*)(buffer + 5 + buffer[3]));
+	return *((uint32_t*)(buffer + (LIS_POS_CHECKSUM - 1) +
+		lis_get_data_length(buffer)));
 }
 
 static inline uint16_t lis_get_packet_length(uint8_t *buffer)
 {
 	return LIS_MIN_PACKET_SIZE + lis_get_data_length(buffer);
+}
+
+static inline void lis_set_message_type(uint8_t *buffer, lis_msg_t msg)
+{
+	buffer[LIS_POS_MESSAGE] = LIS_PREAMBLE & (LIS_MSG_MASK & msg);
+}
+
+static inline void lis_set_command(uint8_t *buffer, lis_command_t command)
+{
+	buffer[LIS_POS_COMMAND] = command;
+}
+
+static inline void lis_set_flags(uint8_t *buffer, lis_flag_t flags)
+{
+	buffer[LIS_POS_FLAGS] = flags;
+}
+
+static inline void lis_set_data(uint8_t *buffer, uint8_t *data, uint8_t data_len)
+{
+	buffer[LIS_POS_DATA_LENGTH] = data_len;
+	while (data_len--) {
+		*(buffer + LIS_POS_DATA) = *data;
+		buffer++;
+		data++;
+	}
+}
+
+static inline uint8_t lis_calculate_header_checksum(uint8_t *buffer)
+{
+	uint8_t header_checksum = LIS_HEADER_CHECKSUM_INITIAL_VALUE;
+	uint8_t i;
+	for (i = 0; i < LIS_POS_HEADER_CHECKSUM; ++i) {
+		header_checksum += buffer[i];
+	}
+	return header_checksum;
+}
+
+static inline uint32_t lis_calculate_packet_checksum(uint8_t *buffer)
+{
+	uint32_t checksum = LIS_CHECKSUM_INITIAL_VALUE;
+	uint16_t i;
+	for (i = 0; i < 6 + lis_get_data_length(buffer); ++i)
+		checksum ^= (uint32_t)buffer[i];
+	return checksum;
+}
+
+/**
+ * Validate LIS packet header
+ *
+ * @param buffer buffer containing complete header (min size is 5)
+ * @return 0 if packet is valid, value greater than zero if packet is invalid
+ */
+static inline uint8_t lis_validate_header(uint8_t *buffer)
+{
+
+	if (!lis_is_preamble(buffer[LIS_POS_PREAMBLE]))
+		return 1;
+	if ((buffer[LIS_POS_MESSAGE] & LIS_MSG_MASK) == 0 ||
+		(buffer[LIS_POS_MESSAGE] & LIS_MSG_MASK) > LIS_MSG_LAST)
+		return 2;
+	if (buffer[LIS_POS_COMMAND] > LIS_COMMAND_LAST)
+		return 3;
+	if (lis_calculate_header_checksum(buffer) !=
+			lis_get_header_checksum(buffer))
+		return 4;
+
+	return 0;
 }
 
 /**
@@ -141,48 +228,11 @@ static inline uint16_t lis_get_packet_length(uint8_t *buffer)
 static inline uint8_t lis_validate_packet(uint8_t *buffer,
 										  uint16_t buffer_len)
 {
-	uint32_t checksum = LIS_CHECKSUM_INITIAL_VALUE;
-	if ((buffer[0] & LIS_PREAMBLE_MASK) != LIS_PREAMBLE)
-		return 1;
-	if ((buffer[0] & LIS_MSG_MASK) == 0 ||
-		(buffer[0] & LIS_MSG_MASK) > LIS_MSG_LAST)
-		return 2;
-	if (buffer[2] > LIS_COMMAND_LAST)
-		return 3;
-	
-	uint16_t i;
-	for (i = 0; i < 5 + buffer[3]; ++i)
-		checksum ^= (uint32_t)buffer[i];
-	
-	if (checksum != lis_get_checksum(buffer))
-		return checksum;
-	
+	if (lis_validate_header(buffer) != 0)
+		return 4;
+	if (lis_calculate_packet_checksum(buffer) != lis_get_checksum(buffer))
+		return 5;
 	return 0;
-}
-
-static inline void lis_set_message_type(uint8_t *buffer, lis_msg_t msg)
-{
-	buffer[0] = LIS_PREAMBLE & (LIS_MSG_MASK & msg);
-}
-
-static inline void lis_set_command(uint8_t *buffer, lis_command_t command)
-{
-	buffer[2] = command;
-}
-
-static inline void lis_set_flags(uint8_t *buffer, lis_flag_t flags)
-{
-	buffer[1] = flags;
-}
-
-static inline void lis_set_data(uint8_t *buffer, uint8_t *data, uint8_t data_len)
-{
-	buffer[3] = data_len;
-	while (data_len--) {
-		*(buffer + 4) = *data;
-		buffer++;
-		data++;
-	}
 }
 
 #endif
